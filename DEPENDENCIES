@@ -1,0 +1,14 @@
+RUNTIME DEPENDENCIES
+
+    glibc
+    linux
+
+
+BUILD DEPENDENCIES
+
+    gcc
+    glibc
+    linux
+    make
+    coreutils
+
