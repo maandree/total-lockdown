@@ -22,9 +22,16 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <linux/kd.h>
+#include <inttypes.h>
+
+#include "layout.c" /* When building, the user must do `loadkeys -C THE_USED_TTY -m THE_PREFERED_LAYOUT > src/layout.c`.
+		     * It may be possible to look for the first /dev/tty* owned by $USER and get the keyboard from KEYMAP
+		     * in rc.conf or vconsole.conf. */
 
 
-#include "layout.c"
+void fdputucs(int fd, int32_t c);
+void fdprint(int fd, char* str);
+void verifier(int fd);
 
 
 int main(int argc, char** argv)
@@ -32,8 +39,9 @@ int main(int argc, char** argv)
   struct termios stty;
   struct termios saved_stty;
   int saved_kbd_mode;
+  pid_t pid;
   
-  printf("\033[H\033[2J\033[3J");
+  printf("\033[H\033[2J\033[3J"); /* \e[3J should (but will probably not) erase the scrollback */
   fflush(stdout);
   tcgetattr(STDIN_FILENO, &saved_stty);
   stty = saved_stty;
@@ -41,17 +49,35 @@ int main(int argc, char** argv)
   stty.c_iflag = 0;
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty);
   ioctl(STDIN_FILENO, KDGKBMODE, &saved_kbd_mode);
-  ioctl(STDIN_FILENO, KDSKBMODE, K_MEDIUMRAW);
+  ioctl(STDIN_FILENO, KDSKBMODE, K_MEDIUMRAW); /* Not we have full access to the keyboard, the
+						* intruder cannot change TTY, but we need to
+					        * implement RESTRICTED kernel keyboard support. */
   
-  pid_t pid = fork();
-  if (pid == (pid_t)-1)
-    return 10;
+  if ((pid = fork()) == (pid_t)-1)
+    return 10; /* We do not use vfork, since we want to be absolutely
+		* sure that the saved settings are not modified by a
+		* memory fault. That could lock the keyboard and force
+		* manual reboot via physical button. */
   
   if (pid)
     waitpid(pid, NULL, 0);
   else
     {
       int modifiers = 0;
+      int fd, fd_child;
+      int fds_pipe[2];
+      
+      if (pipe(fds_pipe))
+	abort();
+      
+      if ((pid = fork()) == (pid_t)-1)
+	abort();
+      
+      if (!pid)
+	verifier(fd_child);
+      
+      fd = fds_pipe[1];
+      fd_child = fds_pipe[0];
       
       alarm(10); /* while testing, we are aborting after ten seconds*/
       printf("\n    Enter passphrase: ");
@@ -76,28 +102,18 @@ int main(int argc, char** argv)
 	    continue;
 	  c = key_maps[modifiers][c] & 0x0FFF;
 	  
-	  if ((KTYP(c) == KT_LATIN) && (KVAL(c) == 127))
-	    printf("    (backspace)\n");
-	  else if (c == K_COMPOSE)
+	  if (c == K_COMPOSE)
 	    printf("    (compose)\n"); /* how do we use compose key? */
-	  else if (c == K_ENTER)
-	    printf("    (enter)\n");
-	  else if (c == K_DOWN)
-	    printf("    (down)\n");
-	  else if (c == K_LEFT)
-	    printf("    (left)\n");
-	  else if (c == K_RIGHT)
-	    printf("    (right)\n");
-	  else if (c == K_UP)
-	    printf("    (up)\n");
 	  else if (KTYP(c) == KT_DEAD)
 	    printf("    (dead)...\n"); /* how do we use dead keys? */
-	  else if (KTYP(c) == KT_FN)
-	    printf("    (fn)%s\n", func_table[KVAL(c)]);
-	  else if (KTYP(c) == KT_LETTER)
-	    printf("    (letter)%i\n", KVAL(c)); /* just convert from utf32 to utf8? */
-	  else if (KTYP(c) == KT_LATIN)
-	    printf("    (latin)%i\n", KVAL(c)); /* just convert from utf32 to utf8? */
+	  else if (c == K_ENTER)      fdputucs(fd, 10);
+	  else if (c == K_DOWN)	      fdprint(fd, "\033[B");
+	  else if (c == K_LEFT)	      fdprint(fd, "\033[D");
+	  else if (c == K_RIGHT)      fdprint(fd, "\033[C");
+	  else if (c == K_UP)	      fdprint(fd, "\033[A");
+	  else if (KTYP(c) == KT_FN)  fdprint(fd, func_table[KVAL(c)]);
+	  else if ((KTYP(c) == KT_LETTER) || (KTYP(c) == KT_LATIN))
+	    fdputucs(fd, KVAL(c) & 255);
 	  else
 	    printf("    (%i %li)\n", KTYP(c), KVAL(c));
 	}
@@ -109,5 +125,22 @@ int main(int argc, char** argv)
   fflush(stdout);
   
   return (pid == (pid_t)-1) ? 10 : 0;
+}
+
+
+void fdputucs(int fd, int32_t c)
+{
+}
+
+
+void fdprint(int fd, char* str)
+{
+}
+
+
+void verifier(int fd)
+{
+  close(STDIN_FILENO);
+  dup2(fd, STDIN_FILENO);
 }
 
