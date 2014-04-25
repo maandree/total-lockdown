@@ -167,6 +167,7 @@ int main(int argc, char** argv)
 	    case KT_META:   /* Just like KT_LATIN, except with meta modifier */
 	      fdputucs(fd, '\033'); /* We will assume this mode rather than set 8:th bit-mode */
 	      fdputucs(fd, KVAL(c) & 255);
+	      /* TODO how should `next_is_dead2` and `have_dead_key` behave here? */
 	      break;
 	      
 	    case KT_FN:     /* Customisable keys, usally for escape sequnces. Includes F-keys and some misc. keys */
@@ -175,10 +176,12 @@ int main(int argc, char** argv)
 	      break;
 	      
 	    case KT_DEAD:   /* Dead key */
+	      next_is_dead2 = 0;
 	      have_dead_key = *(KVAL_MAP[KTYP(c)][KVAL(c)]) & 255;
 	      break;
 	      
 	    case KT_DEAD2:  /* Table-assisted customisable dead keys */
+	      next_is_dead2 = 0;
 	      have_dead_key = KVAL(c);
 	      break;
 	      
