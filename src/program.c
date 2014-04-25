@@ -83,7 +83,7 @@ int main(int argc, char** argv)
       if (!pid)
 	verifier(fd_child);
       
-      alarm(10); /* while testing, we are aborting after ten seconds */
+      alarm(60); /* while testing, we are aborting after 60 seconds, you can also quit with 'q' */
       printf("\n    Enter passphrase: ");
       fflush(stdout);
       
@@ -106,6 +106,7 @@ int main(int argc, char** argv)
 	    continue;
 	  c = key_maps[modifiers][c] & 0x0FFF;
 	  
+	  /* /usr/including/linux/keyboard.h is interresting here... */
 	  if (c == K_COMPOSE)
 	    printf("    (compose)\n"); /* how do we use compose key? */
 	  else if (KTYP(c) == KT_DEAD)
@@ -117,8 +118,11 @@ int main(int argc, char** argv)
 	  else if (c == K_UP)	      fdprint(fd, "\033[A");
 	  else if (KTYP(c) == KT_FN)  fdprint(fd, func_table[KVAL(c)]);
 	  else if ((KTYP(c) == KT_LETTER) || (KTYP(c) == KT_LATIN))
-	    fdputucs(fd, KVAL(c) & 255);
-	  else
+	    if (KVAL(c) == 'q')
+	      break;
+	    else
+	      fdputucs(fd, KVAL(c) & 255);
+	  else if (c != K_HOLE)
 	    printf("    (%i %i)\n", KTYP(c), KVAL(c));
 	}
     }
@@ -134,6 +138,28 @@ int main(int argc, char** argv)
 
 void fdputucs(int fd, int32_t c)
 {
+  static char ucs_buffer[8] = {[7] = 0};
+  if (c < 0)
+    ; /* cannot, if it does, ignore it */
+  else if (c < 0x80)
+    putchar(c);
+  else
+    {
+      long off = 7;
+      *ucs_buffer = (int8_t)0x80;
+      while (c)
+	{
+	  *(ucs_buffer + --off) = (char)((c & 0x3F) | 0x80);
+	  *ucs_buffer |= (*ucs_buffer) >> 1;
+	  c >>= 6;
+	}
+      if ((*ucs_buffer) & (*(ucs_buffer + off) & 0x3F))
+	*(ucs_buffer + --off) = (char)((*ucs_buffer) << 1);
+      else
+	*(ucs_buffer + off) |= (char)((*ucs_buffer) << 1);
+      printf("%s", ucs_buffer + off);
+      fflush(stdout);
+    }
 }
 
 
