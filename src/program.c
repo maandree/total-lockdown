@@ -25,9 +25,12 @@
 #include <linux/kd.h>
 #include <inttypes.h>
 
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-pedantic"
 #include "layout.c" /* When building, the user must do `loadkeys -C THE_USED_TTY -m THE_PREFERED_LAYOUT > src/layout.c`.
 		     * It may be possible to look for the first /dev/tty* owned by $USER and get the keyboard from KEYMAP
 		     * in rc.conf or vconsole.conf. */
+# pragma GCC diagnostic pop
 
 
 void fdputucs(int fd, int32_t c);
@@ -46,7 +49,7 @@ int main(int argc, char** argv)
   fflush(stdout);
   tcgetattr(STDIN_FILENO, &saved_stty);
   stty = saved_stty;
-  stty.c_lflag &= ~(ECHO | ICANON | ISIG);
+  stty.c_lflag &= (tcflag_t)~(ECHO | ICANON | ISIG);
   stty.c_iflag = 0;
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty);
   ioctl(STDIN_FILENO, KDGKBMODE, &saved_kbd_mode);
@@ -74,11 +77,11 @@ int main(int argc, char** argv)
       if ((pid = fork()) == (pid_t)-1)
 	abort();
       
-      if (!pid)
-	verifier(fd_child);
-      
       fd = fds_pipe[1];
       fd_child = fds_pipe[0];
+      
+      if (!pid)
+	verifier(fd_child);
       
       alarm(10); /* while testing, we are aborting after ten seconds */
       printf("\n    Enter passphrase: ");
@@ -116,7 +119,7 @@ int main(int argc, char** argv)
 	  else if ((KTYP(c) == KT_LETTER) || (KTYP(c) == KT_LATIN))
 	    fdputucs(fd, KVAL(c) & 255);
 	  else
-	    printf("    (%i %li)\n", KTYP(c), KVAL(c));
+	    printf("    (%i %i)\n", KTYP(c), KVAL(c));
 	}
     }
   
