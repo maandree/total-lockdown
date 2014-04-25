@@ -11,4 +11,6 @@ obj/
 *.o
 *.out
 *.gch
+*.su
+/src/layout.c
 
