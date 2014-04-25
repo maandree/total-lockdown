@@ -49,7 +49,7 @@ int main(int argc, char** argv)
   stty.c_iflag = 0;
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty);
   ioctl(STDIN_FILENO, KDGKBMODE, &saved_kbd_mode);
-  ioctl(STDIN_FILENO, KDSKBMODE, K_MEDIUMRAW); /* Not we have full access to the keyboard, the
+  ioctl(STDIN_FILENO, KDSKBMODE, K_MEDIUMRAW); /* Now we have full access to the keyboard, the
 						* intruder cannot change TTY, but we need to
 					        * implement RESTRICTED kernel keyboard support. */
   
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
       fd = fds_pipe[1];
       fd_child = fds_pipe[0];
       
-      alarm(10); /* while testing, we are aborting after ten seconds*/
+      alarm(10); /* while testing, we are aborting after ten seconds */
       printf("\n    Enter passphrase: ");
       fflush(stdout);
       
