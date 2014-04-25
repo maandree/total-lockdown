@@ -175,9 +175,9 @@ int main(int argc, char** argv)
 	      break;
 	      
 	    case KT_DEAD:   /* Dead key */
-	      c = *(KVAL_MAP[KTYP(c)][KVAL(c)]) & 255;
-	      c |= KT_DEAD2 << 8;
-	      /* fall through. */
+	      have_dead_key = *(KVAL_MAP[KTYP(c)][KVAL(c)]) & 255;
+	      break;
+	      
 	    case KT_DEAD2:  /* Table-assisted customisable dead keys */
 	      have_dead_key = KVAL(c);
 	      break;
