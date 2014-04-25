@@ -49,7 +49,7 @@ const char* KVAL_MAP[15][256] = {
 		 [KVAL(K_SH_MEM)]       = NULL /* Shift + Scroll Lock, do nothing */,
 		 [KVAL(K_SH_STAT)]      = NULL /* Control + Scroll Lock, do nothing */,
 		 [KVAL(K_BREAK)]        = NULL /* Break (pause), do nothing */,
-		 [KVAL(K_CONS)]         = NULL /* TODO: What is this? */,
+		 [KVAL(K_CONS)]         = NULL /* Switch to last VT, Fat chance! */,
 		 [KVAL(K_CAPS)]         = NULL /* Royal Canterlot Voice, ignore it */,
 		 [KVAL(K_NUM)]          = NULL,
 		 [KVAL(K_HOLD)]         = NULL /* Scroll Lock, do nothing */,
@@ -62,7 +62,7 @@ const char* KVAL_MAP[15][256] = {
 		 [KVAL(K_DECRCONSOLE)]  = NULL /* Switch to previous VT. Fat chance! */,
 		 [KVAL(K_INCRCONSOLE)]  = NULL /* Switch to next VT. Fat chance! */,
 		 [KVAL(K_SPAWNCONSOLE)] = NULL /* Spawn and switch to a new VT. Fat chance! */,
-		 [KVAL(K_BARENUMLOCK)]  = NULL /* TODO: What is this? */,
+		 [KVAL(K_BARENUMLOCK)]  = NULL,
 		 [KVAL(K_ALLOCATED)]    = NULL /* do nothing (see <linux/keyboard.h> for more information) */,
 		 [KVAL(K_NOSUCHMAP)]    = NULL /* do nothing (see <linux/keyboard.h> for more information) */,
 		 NULL /* we always put NULL at the end so all invalid onces will not do things. */},
@@ -87,12 +87,12 @@ const char* KVAL_MAP[15][256] = {
 		 [KVAL(K_PPARENL)]    = "(",
 		 [KVAL(K_PPARENR)]    = ")",
 		 NULL},
-  [KT_DEAD]   = {[KVAL(K_DGRAVE)] = NULL,
-		 [KVAL(K_DACUTE)] = NULL,
-		 [KVAL(K_DCIRCM)] = NULL,
-		 [KVAL(K_DTILDE)] = NULL,
-		 [KVAL(K_DDIERE)] = NULL,
-		 [KVAL(K_DCEDIL)] = NULL,
+  [KT_DEAD]   = {[KVAL(K_DGRAVE)] = "`",
+		 [KVAL(K_DACUTE)] = "'",
+		 [KVAL(K_DCIRCM)] = "^",
+		 [KVAL(K_DTILDE)] = "~",
+		 [KVAL(K_DDIERE)] = "\"",
+		 [KVAL(K_DCEDIL)] = ",",
 		 NULL},
   [KT_CONS]   = {NULL},
   [KT_CUR]    = {[KVAL(K_DOWN)]  = "\033[B",
@@ -174,6 +174,52 @@ const char* KVAL_MAP[15][256] = {
 };
 
 
+struct kbdiacr fallback_accent_table[] = 
+  {
+    {'`',  'A', 0x00C0},  {'`',  'a', 0x00E0},
+    {'\'', 'A', 0x00C1},  {'\'', 'a', 0x00E1},
+    {'^',  'A', 0x00C2},  {'^',  'a', 0x00E2},
+    {'~',  'A', 0x00C3},  {'~',  'a', 0x00E3},
+    {'"',  'A', 0x00C4},  {'"',  'a', 0x00E4},
+    {'O',  'A', 0x00C5},  {'o',  'a', 0x00E5}, /* oa, 0a, and aa are all composions to å. */
+    {'0',  'A', 0x00C5},  {'0',  'a', 0x00E5},
+    {'A',  'A', 0x00C5},  {'a',  'a', 0x00E5},
+    {'A',  'E', 0x00C6},  {'a',  'e', 0x00E6},
+    {',',  'C', 0x00C7},  {',',  'c', 0x00E7},
+    {'`',  'E', 0x00C8},  {'`',  'e', 0x00E8},
+    {'\'', 'E', 0x00C9},  {'\'', 'e', 0x00E9},
+    {'^',  'E', 0x00CA},  {'^',  'e', 0x00EA},
+    {'"',  'E', 0x00CB},  {'"',  'e', 0x00EB},
+    {'`',  'I', 0x00CC},  {'`',  'i', 0x00EC},
+    {'\'', 'I', 0x00CD},  {'\'', 'i', 0x00ED},
+    {'^',  'I', 0x00CE},  {'^',  'i', 0x00EE},
+    {'"',  'I', 0x00CF},  {'"',  'i', 0x00EF},
+    {'-',  'D', 0x00D0},  {'-',  'd', 0x00F0},
+    {'~',  'N', 0x00D1},  {'~',  'n', 0x00F1},
+    {'`',  'O', 0x00D2},  {'`',  'o', 0x00F2},
+    {'\'', 'O', 0x00D3},  {'\'', 'o', 0x00F3},
+    {'^',  'O', 0x00D4},  {'^',  'o', 0x00F4},
+    {'~',  'O', 0x00D5},  {'~',  'o', 0x00F5},
+    {'"',  'O', 0x00D6},  {'"',  'o', 0x00F6},
+    /*             ×                    ÷       Not composed characters. */
+    {'/',  'O', 0x00D8},  {'/',  'o', 0x00F8},
+    {'`',  'U', 0x00D9},  {'`',  'u', 0x00F9},
+    {'\'', 'U', 0x00DA},  {'\'', 'u', 0x00FA},
+    {'^',  'U', 0x00DB},  {'^',  'u', 0x00FB},
+    {'"',  'U', 0x00DC},  {'"',  'u', 0x00FC},
+    {'\'', 'Y', 0x00DD},  {'\'', 'y', 0x00FD},
+    {'T',  'H', 0x00DE},  {'t',  'h', 0x00FE},
+    {'s',  's', 0x00DF},  {'"',  'y', 0x00FF},
+    {'s',  'z', 0x00DF},  {'i',  'j', 0x00FF}, /* ij produces ÿ, probably not ĳ because ĳ
+						* cannot be displayed by the TTY and ij
+						* looks kind of like ÿ.
+						* sz → ß is a synonym for ss → ß, I do not
+						* know why (after all it is a long s follow
+						* by a regular (final) s), by it is. */
+    {0, 0, 0} /* sentinel */
+  };
+
+
 int main(int argc, char** argv)
 {
   struct termios stty;
@@ -204,6 +250,8 @@ int main(int argc, char** argv)
     waitpid(pid, NULL, 0);
   else
     {
+      int next_is_dead2 = 0;
+      int have_dead_key = 0;
       int modifiers = 0;
       int fd, fd_child;
       int fds_pipe[2];
@@ -226,7 +274,7 @@ int main(int argc, char** argv)
       printf("\n    Enter passphrase: ");
       fflush(stdout);
       
-      for (;;)
+      for (;;) /* Please fix or report any inconsistency with the Linux VT keyboard. */
 	{
 	  int c = getchar();
 	  int released = !!(c & 0x80);
@@ -251,7 +299,44 @@ int main(int argc, char** argv)
 	    case KT_LATIN:  /* Symbols that are not affected by the Royal Canterlot Voice key */
 	      if (KVAL(c) == 'q')
 		goto stop;
-	      fdputucs(fd, KVAL(c) & 255);
+	      if (next_is_dead2)
+		{
+		  next_is_dead2 = 0;
+		  have_dead_key = KVAL(c) & 255;
+		}
+	      else if (have_dead_key) /* TODO: how does multiple dead keys work? */
+		{
+		  unsigned int i;
+		  c = KVAL(c) & 255;
+		  for (i = 0; i < accent_table_size; i++)
+		    if (accent_table[i].diacr == have_dead_key)
+		      if (accent_table[i].base == c)
+			{
+			  c = accent_table[i].result;
+			  break;
+			}
+		  if (i == accent_table_size)
+		    {
+		      for (i = 0; fallback_accent_table[i].result; i++)
+			if (fallback_accent_table[i].diacr == have_dead_key)
+			  if (fallback_accent_table[i].base == c)
+			    {
+			      c = fallback_accent_table[i].result;
+			      break;
+			    }
+		      if (fallback_accent_table[i].result == 0)
+			{
+			  if (c == ' ')
+			    c = have_dead_key;
+			  else if (c != have_dead_key)
+			    fdputucs(fd, have_dead_key);
+			}
+		    }
+		  fdputucs(fd, c);
+		  have_dead_key = 0;
+		}
+	      else
+		fdputucs(fd, KVAL(c) & 255);
 	      break;
 	      
 	    case KT_META:   /* Just like KT_LATIN, except with meta modifier */
@@ -264,7 +349,12 @@ int main(int argc, char** argv)
 		fdprint(fd, func_table[KVAL(c)]);
 	      break;
 	      
-	    case KT_DEAD:   /* TODO: Dead key, can we utilise Linux for this? */
+	    case KT_DEAD:   /* Dead key */
+	      c = *(KVAL_MAP[KTYP(c)][KVAL(c)]) & 255;
+	      c |= KT_DEAD2 << 8;
+	      /* fall through. */
+	    case KT_DEAD2:  /* Table-assisted customisable dead keys */
+	      have_dead_key = KVAL(c);
 	      break;
 	      
 	    case KT_SPEC:   /* Special keys*/
@@ -276,10 +366,13 @@ int main(int argc, char** argv)
 	      else if (KTYP(c) == KT_SPEC)
 		switch (c)
 		  {
-		  case K_COMPOSE: /* TODO: Compose key, can we utilise Linux for this? */
+		  case K_COMPOSE:     /* Compose key */
+		    next_is_dead2 = 1;
 		    break;
 		    
-		  case K_NUM:     /* TODO: Num Lock */
+		  case K_NUM:         /* TODO: Num Lock */
+		  case K_BARENUMLOCK: /* No difference as far as this program is consired.
+				       * (See linux-howtos/Keyboard-and-Console-HOWTO for more information.)  */
 		    break;
 		    
 		  default: /* Other keys do nothing */
@@ -291,8 +384,7 @@ int main(int argc, char** argv)
 	    case KT_CONS:   /* Somepony is trying to switch VT. Fat chance! */
 	    case KT_LOCK:   /* TODO: Is this sticky keys that toggle? */
 	    case KT_SLOCK:  /* TODO: Is this sticky keys that resemble dead keys? */
-	    case KT_DEAD2:  /* TODO: What is this? */
-	    case KT_BRL:    /* Braille, how does this work? */
+	    case KT_BRL:    /* TODO: Braille, how does this work? */
 	    default:        /* What?! This should not happen! */
 	      break;
 	    }
