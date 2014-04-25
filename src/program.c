@@ -41,8 +41,9 @@ int main(int argc, char** argv)
   int saved_kbd_mode;
   pid_t pid;
   char* tty;
+  char* encrypted;
   
-  
+  /* verify that we are in a real VT, otherwise we cannot possibly lock it down */
   tty = ttyname(STDIN_FILENO);
   if (strstr(tty, "/dev/tty") != tty)
     {
@@ -50,10 +51,11 @@ int main(int argc, char** argv)
       return 1;
     }
   
-  
-  if (getcrypt() == NULL)
+  /* get the real user's encrypted passphrase */
+  if ((encrypted = getcrypt()) == NULL)
     return 2;
   
+  /* lock down */
   printf("\033[H\033[2J\033[3J"); /* \e[3J should (but will probably not) erase the scrollback */
   fflush(stdout);
   tcgetattr(STDIN_FILENO, &saved_stty);
@@ -90,7 +92,7 @@ int main(int argc, char** argv)
       fd_child = fds_pipe[0];
       
       if (!pid)
-	verifier(fd_child);
+	verifier(fd_child, encrypted);
       else
 	{
 	  fd = STDOUT_FILENO; /* This is just testing. */
@@ -104,6 +106,7 @@ int main(int argc, char** argv)
       return 0;
     }
   
+  /* unlock */
   ioctl(STDIN_FILENO, KDSKBMODE, saved_kbd_mode);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty);
   printf("\033[H\033[2J");
@@ -113,7 +116,7 @@ int main(int argc, char** argv)
 }
 
 
-void verifier(int fd)
+void verifier(int fd, char* encrypted)
 {
   close(STDIN_FILENO);
   dup2(fd, STDIN_FILENO);
