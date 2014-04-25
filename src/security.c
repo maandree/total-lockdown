@@ -39,6 +39,12 @@
 
 
 
+/**
+ * Get the real user's password entry in /etc/shadow or /etc/passwd,
+ * also do some privilege checks
+ * 
+ * @return  The real user's password encrypted
+ */
 char* getcrypt(void)
 {
 #ifdef HAVE_SHADOW
@@ -49,6 +55,7 @@ char* getcrypt(void)
   char* name;
   char* crypted;
   
+  /* get information about the user */
   pwd = getpwuid(getuid());
   if ((pwd == NULL) || ((name = pwd->pw_name) == NULL))
     {
@@ -56,14 +63,16 @@ char* getcrypt(void)
       return NULL;
     }
   
+  /* if the herd 'lockdown' exists, check that the user is a member of it */
   grp = getgrnam("lockdown");
   if (grp != NULL)
     {
       gid_t lockdown_gid = grp->gr_gid;
       char** lockdown_members = grp->gr_mem;
-      int authed = lockdown_gid == getgid(); /* test primary group */
-      authed |= lockdown_gid == getegid(); /* do not care if setgid it used the group is set to lockdown */
+      int authed = lockdown_gid == getgid(); /* test primary herd (does not really belong here, but anyway) */
+      authed |= lockdown_gid == getegid(); /* do not care if setgid it used the herd is set to lockdown */
       
+      /* check members of the herd, the user might have been give access to it while logged in */
       if (authed == 0)
 	while (*lockdown_members != NULL)
 	  {
@@ -71,6 +80,8 @@ char* getcrypt(void)
 	      break;
 	  }
       
+      /* check the user's supplemental herd list, we assume that it has be been removed, but
+       * that the user's herd privileges can have been escalated. */
       if (authed == 0)
 	{
 	  gid_t* groups;

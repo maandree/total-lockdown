@@ -23,6 +23,12 @@
 #include <grp.h>
 
 
+/**
+ * Get the real user's password entry in /etc/shadow or /etc/passwd,
+ * also do some privilege checks
+ * 
+ * @return  The real user's password encrypted
+ */
 char* getcrypt(void);
 
 
