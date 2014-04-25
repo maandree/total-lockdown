@@ -115,6 +115,11 @@ static void fdputucs(int fd, int32_t c)
 }
 
 
+/**
+ * Read one line from the keyboard
+ * 
+ * @param  fd  File descriptor for the sink
+ */
 void readkbd(int fd)
 {
   static int next_is_dead2 = 0;
@@ -144,8 +149,6 @@ void readkbd(int fd)
 	{
 	case KT_LETTER: /* Symbols that are affected by the Royal Canterlot Voice key */
 	case KT_LATIN:  /* Symbols that are not affected by the Royal Canterlot Voice key */
-	  if (KVAL(c) == 'q')
-	    return;
 	  if (next_is_dead2)
 	    {
 	      next_is_dead2 = 0;
@@ -212,7 +215,12 @@ void readkbd(int fd)
 	case KT_CUR:    /* Arrows keys */
 	case KT_ASCII:  /* This is what happens when somepony holds down Alternative whil using the keypad */
 	  if (KVAL_MAP[KTYP(c)][KVAL(c)] != NULL)
-	    fdprint(fd, KVAL_MAP[KTYP(c)][KVAL(c)]);
+	    {
+	      c = KVAL_MAP[KTYP(c)][KVAL(c)];
+	      fdprint(fd, c);
+	      if (c == '\n')
+		return;
+	    }
 	  else if (KTYP(c) == KT_SPEC)
 	    switch (c)
 	      {

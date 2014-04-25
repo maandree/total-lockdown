@@ -19,6 +19,11 @@
 #define TOTAL_LOCKDOWN_KBDDRIVER_H
 
 
+/**
+ * Read one line from the keyboard
+ * 
+ * @param  fd  File descriptor for the sink
+ */
 void readkbd(int fd);
 
 

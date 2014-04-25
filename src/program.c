@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	{
 	  fd = STDOUT_FILENO; /* This is just testing. */
 	  
-	  alarm(60); /* while testing, we are aborting after 60 seconds, you can also quit with 'q' */
+	  alarm(60); /* while testing, we are aborting after 60 seconds */
 	  printf("\n    Enter passphrase: ");
 	  fflush(stdout);
 	  
