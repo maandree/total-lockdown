@@ -63,6 +63,10 @@ char* getcrypt(void)
       return NULL;
     }
   
+  /* drop privileges, we have not use for them anymore */
+  seteuid(getuid());
+  setegid(getgid());
+  
   /* if the herd 'lockdown' exists, check that the user is a member of it */
   grp = getgrnam("lockdown");
   if (grp != NULL)
