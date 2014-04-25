@@ -26,6 +26,7 @@
 #include <inttypes.h>
 #include <linux/kd.h>
 
+#include "security.h"
 #include "kbddriver.h"
 
 
@@ -39,11 +40,14 @@ int main(int argc, char** argv)
   int saved_kbd_mode;
   pid_t pid;
   
+  if (getcrypt() == NULL)
+    return 2;
+  
   printf("\033[H\033[2J\033[3J"); /* \e[3J should (but will probably not) erase the scrollback */
   fflush(stdout);
   tcgetattr(STDIN_FILENO, &saved_stty);
   stty = saved_stty;
-  stty.c_lflag &= 0 /*(tcflag_t)~(ECHO | ICANON | ISIG)*/;
+  stty.c_lflag &= 0 /* (tcflag_t)~(ECHO | ICANON | ISIG) */;
   stty.c_iflag = 0;
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty);
   ioctl(STDIN_FILENO, KDGKBMODE, &saved_kbd_mode);

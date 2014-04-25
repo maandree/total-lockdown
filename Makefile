@@ -34,9 +34,9 @@ FLAGS = $(OPTIMISE) -std=$(STD) $(WARN) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 .PHONY: all
 all: bin/total-lockdown
 
-bin/total-lockdown: obj/program.o obj/keyboard.o obj/kbddriver.o
+bin/total-lockdown: obj/program.o obj/keyboard.o obj/kbddriver.o obj/security.o
 	@mkdir -p bin
-	$(CC) $(FLAGS) -o $@ $^
+	$(CC) $(FLAGS) -lcrypt -o $@ $^
 
 obj/program.o: src/program.c src/layout.c src/*.h
 	@mkdir -p obj
