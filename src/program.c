@@ -43,7 +43,7 @@ int main(int argc, char** argv)
   fflush(stdout);
   tcgetattr(STDIN_FILENO, &saved_stty);
   stty = saved_stty;
-  stty.c_lflag &= (tcflag_t)~(ECHO | ICANON | ISIG);
+  stty.c_lflag &= 0 /*(tcflag_t)~(ECHO | ICANON | ISIG)*/;
   stty.c_iflag = 0;
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &stty);
   ioctl(STDIN_FILENO, KDGKBMODE, &saved_kbd_mode);
