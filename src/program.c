@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 #include <linux/kd.h>
 #include <inttypes.h>
 
