@@ -25,6 +25,7 @@
 #include <sys/wait.h>
 #include <inttypes.h>
 #include <linux/kd.h>
+#include <string.h>
 
 #include "security.h"
 #include "kbddriver.h"
@@ -39,6 +40,16 @@ int main(int argc, char** argv)
   struct termios saved_stty;
   int saved_kbd_mode;
   pid_t pid;
+  char* tty;
+  
+  
+  tty = ttyname(STDIN_FILENO);
+  if (strstr(tty, "/dev/tty") != tty)
+    {
+      fprintf(stderr, "A Linux console is required (as stdin).\n");
+      return 1;
+    }
+  
   
   if (getcrypt() == NULL)
     return 2;
