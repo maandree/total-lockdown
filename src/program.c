@@ -26,6 +26,8 @@
 #include <linux/kd.h>
 #include <linux/keyboard.h>
 #include <inttypes.h>
+#include <string.h>
+
 
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-pedantic"
@@ -278,7 +280,16 @@ void fdputucs(int fd, int32_t c)
 
 void fdprint(int fd, const char* str)
 {
-  printf("%s", str); /* TODO print to fd */
+  size_t n = strlen(str);
+  ssize_t wrote;
+  while (n)
+    {
+      wrote = write(fd, str, n);
+      if (wrote < 0)
+	break;
+      n -= (size_t)wrote;
+      str += (size_t)wrote;
+    }
 }
 
 
