@@ -76,14 +76,16 @@ int main(int argc, char** argv)
       
       if (!pid)
 	verifier(fd_child);
-      
-      fd = STDOUT_FILENO; /* This is just testing. */
-      
-      alarm(60); /* while testing, we are aborting after 60 seconds, you can also quit with 'q' */
-      printf("\n    Enter passphrase: ");
-      fflush(stdout);
-      
-      readkbd(fd);
+      else
+	{
+	  fd = STDOUT_FILENO; /* This is just testing. */
+	  
+	  alarm(60); /* while testing, we are aborting after 60 seconds, you can also quit with 'q' */
+	  printf("\n    Enter passphrase: ");
+	  fflush(stdout);
+	  
+	  readkbd(fd);
+	}
       return 0;
     }
   
