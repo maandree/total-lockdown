@@ -30,18 +30,19 @@ STD = gnu99
 FLAGS = $(OPTIMISE) -std=$(STD) $(WARN) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
 
+
 .PHONY: all
 all: bin/total-lockdown
 
-bin/total-lockdown: obj/program.o obj/keyboard.o
+bin/total-lockdown: obj/program.o obj/keyboard.o obj/kbddriver.o
 	@mkdir -p bin
 	$(CC) $(FLAGS) -o $@ $^
 
-obj/program.o: src/program.c src/layout.c
+obj/program.o: src/program.c src/layout.c src/*.h
 	@mkdir -p obj
 	$(CC) $(FLAGS) -c -o $@ $<
 
-obj/%.o: src/%.c
+obj/%.o: src/%.c src/*.h
 	@mkdir -p obj
 	$(CC) $(FLAGS) -c -o $@ $<
 
