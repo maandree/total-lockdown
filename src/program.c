@@ -41,7 +41,25 @@ void verifier(int fd);
 
 
 /* from keyboard.c */
+
+/**
+ * Symbol map, `NULL` is used if the key does not produce any
+ * symbol or (in the case of KT_LATIN, KT_LETTER, KT_META) if
+ * the output can be calcuated from the key value.
+ */
 extern const char* KVAL_MAP[][256];
+
+/**
+ * Fallback compose map that is used then the keyboard layout does not
+ * specify the common compositions. In the Linux kernel keyboard compose
+ * key and dead key are similarly to each other. The only actual difference
+ * is compose key turns the next key into a dead key. Each entry is a
+ * 3–tuple (struct kbdiacr), where the first symbol is the diacritical,
+ * the second is the base character, i.e. in the order they are typed, and
+ * the third is the resulting symbol. The resulting symbol is not in ASCII
+ * is it most not be specified with a character literal, rather its Unicode
+ * index should be specified with a numerical literal.
+ */
 extern struct kbdiacr fallback_accent_table[];
 
 

@@ -20,7 +20,12 @@
 #include <stdlib.h>
 
 
-const char* KVAL_MAP[15][256] = {
+/**
+ * Symbol map, `NULL` is used if the key does not produce any
+ * symbol or (in the case of KT_LATIN, KT_LETTER, KT_META) if
+ * the output can be calcuated from the key value.
+ */
+const char* KVAL_MAP[][256] = {
   [KT_LATIN]  = {NULL},
   [KT_LETTER] = {NULL},
   [KT_FN]     = {NULL /* There are symbols keys here, see <linux/keyboard.h> if you need any of them. */},
@@ -155,8 +160,20 @@ const char* KVAL_MAP[15][256] = {
 };
 
 
+/**
+ * Fallback compose map that is used then the keyboard layout does not
+ * specify the common compositions. In the Linux kernel keyboard compose
+ * key and dead key are similarly to each other. The only actual difference
+ * is compose key turns the next key into a dead key. Each entry is a
+ * 3–tuple (struct kbdiacr), where the first symbol is the diacritical,
+ * the second is the base character, i.e. in the order they are typed, and
+ * the third is the resulting symbol. The resulting symbol is not in ASCII
+ * is it most not be specified with a character literal, rather its Unicode
+ * index should be specified with a numerical literal.
+ */
 struct kbdiacr fallback_accent_table[] = 
   {
+    /* Compositions to the higher quarter of the lower 256-character part of the character table. */
     {'`',  'A', 0x00C0},  {'`',  'a', 0x00E0},
     {'\'', 'A', 0x00C1},  {'\'', 'a', 0x00E1},
     {'^',  'A', 0x00C2},  {'^',  'a', 0x00E2},
