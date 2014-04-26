@@ -216,9 +216,9 @@ void readkbd(int fd)
 	case KT_ASCII:  /* This is what happens when somepony holds down Alternative whil using the keypad */
 	  if (KVAL_MAP[KTYP(c)][KVAL(c)] != NULL)
 	    {
-	      c = KVAL_MAP[KTYP(c)][KVAL(c)];
-	      fdprint(fd, c);
-	      if (c == '\n')
+	      const char* str = KVAL_MAP[KTYP(c)][KVAL(c)];
+	      fdprint(fd, str);
+	      if (!strcmp(str, "\n"))
 		return;
 	    }
 	  else if (KTYP(c) == KT_SPEC)

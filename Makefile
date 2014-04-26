@@ -36,7 +36,7 @@ all: bin/total-lockdown
 
 bin/total-lockdown: obj/program.o obj/keyboard.o obj/kbddriver.o obj/security.o
 	@mkdir -p bin
-	$(CC) $(FLAGS) -lcrypt -o $@ $^
+	$(CC) $(FLAGS) -lcrypt -lpassphrase -o $@ $^
 
 obj/program.o: src/program.c src/layout.c src/*.h
 	@mkdir -p obj

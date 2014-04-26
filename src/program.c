@@ -25,13 +25,15 @@
 #include <sys/wait.h>
 #include <inttypes.h>
 #include <linux/kd.h>
+#include <crypt.h>
 #include <string.h>
+#include <passphrase.h>
 
 #include "security.h"
 #include "kbddriver.h"
 
 
-void verifier(int fd);
+int verifier(int fd, char* encrypted);
 
 
 int main(int argc, char** argv)
@@ -53,10 +55,19 @@ int main(int argc, char** argv)
   
   /* get the real user's encrypted passphrase */
   if ((encrypted = getcrypt()) == NULL)
-    return 2;
+    {
+#ifndef DEBUG
+      return 2;
+#else
+      encrypted = "$6$MWcK52I9$xKtRFG3JIRfuC80R/8fu3vDO6qPRy6IK6B8GsaA6n.HvdP8J3M9n0.nNc/ZcdkzHWApXCVsQBk4V.YGsmfkNv1";
+      /* Passphrase is ‘ppp’ when testing without setuid permission, which is needed for valgrind. */
+#endif
+    }
   
   /* lock down */
+#ifndef DEBUG
   printf("\033[H\033[2J\033[3J"); /* \e[3J should (but will probably not) erase the scrollback */
+#endif
   fflush(stdout);
   tcgetattr(STDIN_FILENO, &saved_stty);
   stty = saved_stty;
@@ -68,6 +79,8 @@ int main(int argc, char** argv)
 						* intruder cannot change TTY, but we need to
 					        * implement RESTRICTED kernel keyboard support. */
   
+  printf("\n");
+ retry:
   if ((pid = fork()) == (pid_t)-1)
     return 10; /* We do not use vfork, since we want to be absolutely
 		* sure that the saved settings are not modified by a
@@ -88,37 +101,68 @@ int main(int argc, char** argv)
       if ((pid = fork()) == (pid_t)-1)
 	abort();
       
+#ifdef DEBUG
+      alarm(60); /* when testing, we are aborting after 60 seconds */
+#endif
+      
       fd = fds_pipe[1];
       fd_child = fds_pipe[0];
       
       if (!pid)
-	verifier(fd_child, encrypted);
+	return verifier(fd_child, encrypted);
       else
 	{
-	  fd = STDOUT_FILENO; /* This is just testing. */
+	  int status;
 	  
-	  alarm(60); /* while testing, we are aborting after 60 seconds */
-	  printf("\n    Enter passphrase: ");
+	  printf("    Enter passphrase: ");
 	  fflush(stdout);
 	  
 	  readkbd(fd);
+	  waitpid(pid, &status, 0);
+	  
+	  if (WIFEXITED(status) ? WEXITSTATUS(status) : 1)
+	    goto retry;
+	  return 0;
 	}
-      return 0;
     }
   
   /* unlock */
   ioctl(STDIN_FILENO, KDSKBMODE, saved_kbd_mode);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_stty);
+#ifndef DEBUG
   printf("\033[H\033[2J");
+#endif
   fflush(stdout);
   
   return (pid == (pid_t)-1) ? 10 : 0;
 }
 
 
-void verifier(int fd, char* encrypted)
+int verifier(int fd, char* encrypted)
 {
+  char* passphrase;
+  char* passphrase_crypt;
+  
   close(STDIN_FILENO);
   dup2(fd, STDIN_FILENO);
+  
+  passphrase = passphrase_read();
+  passphrase_crypt = crypt(passphrase, encrypted);
+  memset(passphrase, 0, strlen(passphrase)); /* wipe it! */
+  free(passphrase);
+  
+  if (passphrase_crypt == NULL)
+    {
+      /* This should not happen */
+      perror("total-lockdown");
+      sleep(5);
+      return 2;
+    }
+  
+  if (!strcmp(passphrase_crypt, encrypted))
+    return 0;
+  
+  sleep(3);
+  return 1;
 }
 

@@ -2,6 +2,7 @@ RUNTIME DEPENDENCIES
 
     glibc
     linux
+    libpassphrase
 
 
 BUILD DEPENDENCIES
@@ -9,6 +10,7 @@ BUILD DEPENDENCIES
     gcc
     glibc
     linux
+    libpassphrase
     make
     coreutils
 
