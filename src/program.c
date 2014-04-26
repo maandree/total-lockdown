@@ -33,6 +33,17 @@
 #include "kbddriver.h"
 
 
+#if defined(EBUG) && !defined(DEBUG)
+# define DEBUG
+#endif
+#if defined(DEBUG) && !defined(EBUG)
+# define EBUG
+#endif
+#ifndef DEBUG
+# warning If you are compiling for testing consider compiling with -DEBUG to avoid locking your system.
+#endif
+
+
 int verifier(int fd, char* encrypted);
 
 
