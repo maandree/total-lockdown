@@ -159,7 +159,7 @@ int verifier(int fd, char* encrypted)
   passphrase = passphrase_read();
   passphrase_crypt = crypt(passphrase, encrypted);
   memset(passphrase, 0, strlen(passphrase)); /* wipe it! */
-  /** free(passphrase); ** TODO why do I get double free fault? **/
+  free(passphrase);
   
   if (passphrase_crypt == NULL)
     {
