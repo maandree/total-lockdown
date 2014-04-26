@@ -144,6 +144,9 @@ int main(int argc, char** argv)
 #endif
   fflush(stdout);
   
+  if (name)
+    free(name);
+  
   return (pid == (pid_t)-1) ? 10 : 0;
 }
 
