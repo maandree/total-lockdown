@@ -32,5 +32,13 @@
 char* getcrypt(void);
 
 
+/**
+ * get the real user's real name and fall back to username
+ * 
+ * @return  The real user's name
+ */
+char* getname(void);
+
+
 #endif
 

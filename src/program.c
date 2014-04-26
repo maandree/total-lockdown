@@ -44,6 +44,7 @@ int main(int argc, char** argv)
   pid_t pid;
   char* tty;
   char* encrypted;
+  char* name;
   
   /* verify that we are in a real VT, otherwise we cannot possibly lock it down */
   tty = ttyname(STDIN_FILENO);
@@ -52,6 +53,9 @@ int main(int argc, char** argv)
       fprintf(stderr, "A Linux console is required (as stdin).\n");
       return 1;
     }
+  
+  /* get the real user's real name or username */
+  name = getname();
   
   /* get the real user's encrypted passphrase */
   if ((encrypted = getcrypt()) == NULL)
@@ -114,11 +118,17 @@ int main(int argc, char** argv)
 	{
 	  int status;
 	  
-	  printf("    Enter passphrase: ");
+	  if (name == NULL)
+	    printf("    Enter passphrase: ");
+	  else
+	    printf("    Enter passphrase for %s: ", name);
 	  fflush(stdout);
 	  
 	  readkbd(fd);
 	  waitpid(pid, &status, 0);
+	  
+	  close(fds_pipe[0]);
+	  close(fds_pipe[1]);
 	  
 	  if (WIFEXITED(status) ? WEXITSTATUS(status) : 1)
 	    goto retry;
@@ -149,7 +159,7 @@ int verifier(int fd, char* encrypted)
   passphrase = passphrase_read();
   passphrase_crypt = crypt(passphrase, encrypted);
   memset(passphrase, 0, strlen(passphrase)); /* wipe it! */
-  free(passphrase);
+  /** free(passphrase); ** TODO why do I get double free fault? **/
   
   if (passphrase_crypt == NULL)
     {

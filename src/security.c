@@ -15,6 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#define _XOPEN_SOURCE
+#define _GNU_SOURCE
+
 #include "security.h"
 
 #ifndef NO_SHADOW
@@ -23,7 +26,6 @@
 # endif
 #endif
 
-#define _XOPEN_SOURCE
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -164,5 +166,24 @@ char* getcrypt(void)
     }
   
   return crypted;
+}
+
+
+/**
+ * get the real user's real name and fall back to username
+ * 
+ * @return  The real user's name
+ */
+char* getname(void)
+{
+  struct passwd* pwd = getpwuid(getuid());
+  char* name = pwd->pw_gecos ? pwd->pw_gecos : pwd->pw_name;
+  if (name)
+    {
+      *(strchrnul(name, ',')) = '\0';
+      if (strlen(name) == 0)
+	name = pwd->pw_name;
+    }
+  return name == NULL ? NULL : strdup(name);
 }
 
