@@ -1,3 +1,6 @@
 total-lockdown
-Lock the current TTY and hinder switch to another
+Lock the current TTY and hinder switch to another,
+block keyboard command, stop the ssh server and
+otherwise do everything to stop anyone from accessing
+the computer.
 
